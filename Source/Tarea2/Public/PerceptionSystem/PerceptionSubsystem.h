@@ -16,10 +16,21 @@ protected:
 	virtual void Deinitialize() override;
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
 
+public:
+
+	//UFUNCTION(BlueprintCallable)
+	//void AddActionToActor(AActor* InActor, const TSubclassOf<UPerceptionComponent>& InAction);
+
+	//UFUNCTION(BlueprintCallable)
+	//void RemoveActionToActor(AActor* InActor, const TSubclassOf<UPerceptionComponent>& InAction);
+
+	//UFUNCTION(BlueprintCallable)
+	//void StopCurrentAction(AActor* InActor);
+
 private:
 	UFUNCTION(BlueprintCallable)
 	void GetAllPerceptionComponents(TArray<UPerceptionComponent*>& OutActorsPerceptionComponents) const;
-
+	
 	UFUNCTION()
 	void RegisterNewActor(AActor* InNewActor);
 
