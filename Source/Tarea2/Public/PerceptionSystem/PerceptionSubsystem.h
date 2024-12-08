@@ -4,6 +4,7 @@
 #include "Subsystems/WorldSubsystem.h"
 #include "PerceptionSubsystem.generated.h"
 
+class UPerceptionComponent;
 
 UCLASS()
 class TAREA2_API UPerceptionSubsystem : public UWorldSubsystem
@@ -15,17 +16,16 @@ protected:
 	virtual void Deinitialize() override;
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
 
-public:
-
-	
 private:
+	UFUNCTION(BlueprintCallable)
+	void GetAllPerceptionComponents(TArray<UPerceptionComponent*>& OutActorsPerceptionComponents) const;
 
-	void GetAllPerceptionComponentsOwners(TArray<AActor*>& ActorsPerception) const;
-	void RegisterNewActor(AActor* InNewActor) const;
+	UFUNCTION()
+	void RegisterNewActor(AActor* InNewActor);
 
-	UPROPERTY()
-	TArray<class AActor*>& ActorsPerception;
-	
+	UPROPERTY(VisibleAnywhere)
+	TArray<UPerceptionComponent*> ActorsPerceptionComponents;
+
+	FDelegateHandle OnActorSpawnedDelegateHandle;
 };
-
 

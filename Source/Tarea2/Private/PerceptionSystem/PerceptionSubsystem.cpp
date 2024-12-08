@@ -1,22 +1,33 @@
 #include "Tarea2/Public/PerceptionSystem/PerceptionSubsystem.h"
-
 #include "Kismet/GameplayStatics.h"
 #include "Tarea2/Public/PerceptionSystem/PerceptionComponent.h"
+
 
 void UPerceptionSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
+	
+	GetAllPerceptionComponents(ActorsPerceptionComponents);
+	
+	FOnActorSpawned::FDelegate Delegate = FOnActorSpawned::FDelegate::CreateUObject(this, &ThisClass::RegisterNewActor);
+	OnActorSpawnedDelegateHandle = GetWorld()->AddOnActorSpawnedHandler(Delegate);
 
-	GetAllPerceptionComponentsOwners(ActorsPerception);
-
-	FOnActorSpawned::FDelegate Delegate;
-	Delegate.BindUObject(this, &ThisClass::RegisterNewActor);
-	FDelegateHandle Handle = GetWorld()->AddOnActorSpawnedHandler(Delegate);
+	GetWorld()->GetTimerManager().SetTimerForNextTick([this]()
+	{
+		GetAllPerceptionComponents(ActorsPerceptionComponents);
+	});
 }
 
 void UPerceptionSubsystem::Deinitialize()
 {
 	Super::Deinitialize();
+
+	if (OnActorSpawnedDelegateHandle.IsValid())
+	{
+		GetWorld()->RemoveOnActorSpawnedHandler(OnActorSpawnedDelegateHandle);
+	}
+
+	ActorsPerceptionComponents.Empty();
 }
 
 bool UPerceptionSubsystem::ShouldCreateSubsystem(UObject* Outer) const
@@ -24,22 +35,26 @@ bool UPerceptionSubsystem::ShouldCreateSubsystem(UObject* Outer) const
 	return true;
 }
 
-void UPerceptionSubsystem::GetAllPerceptionComponentsOwners(TArray<AActor*>& PercepCompOwners) const
+void UPerceptionSubsystem::GetAllPerceptionComponents(TArray<UPerceptionComponent*>& OutActorsPerceptionComponents) const
 {
 	TArray<AActor*> OutActors;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), OutActors);
-
-	for (auto* Actor : OutActors)
+	
+	for (AActor* Actor : OutActors)
 	{
-		if (Actor->FindComponentByClass<UPerceptionComponent>())
+		UPerceptionComponent* PerceptionComp = Actor->FindComponentByClass<UPerceptionComponent>();
+		if (PerceptionComp)
 		{
-			PercepCompOwners.Add(Actor);
+			OutActorsPerceptionComponents.Add(PerceptionComp);
 		}
 	}
 }
 
-void UPerceptionSubsystem::RegisterNewActor(AActor* InNewActor) const
+void UPerceptionSubsystem::RegisterNewActor(AActor* InNewActor)
 {
-	ActorsPerception.Add(InNewActor);
+	UPerceptionComponent* PerceptionComp = InNewActor->FindComponentByClass<UPerceptionComponent>();
+	if (PerceptionComp)
+	{
+		ActorsPerceptionComponents.Add(PerceptionComp);
+	}
 }
-
