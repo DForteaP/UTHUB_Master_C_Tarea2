@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Detections/SenseImplementationBase.h"
 #include "Components/ActorComponent.h"
 #include "PerceptionComponent.generated.h"
 
@@ -21,9 +22,6 @@ struct TAREA2_API FPerceptionInfo
 	float ExtendedRadius = 750.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Detection")
-	TSubclassOf<AActor> ActorClassToDetect;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Detection")
 	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypesToDetect;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Detection")
@@ -32,6 +30,15 @@ struct TAREA2_API FPerceptionInfo
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Detection")
 	bool bPerceptionEnabled = true;
 };
+
+UENUM(BlueprintType)
+enum class ESenseType : uint8
+{
+	Sight UMETA(DisplayName = "Sight"),
+	Hearing UMETA(DisplayName = "Hearing"),
+	Smell UMETA(DisplayName = "Smell")
+};
+
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class TAREA2_API UPerceptionComponent : public UActorComponent
@@ -45,6 +52,12 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sense")
+	TSet<ESenseType> SenseTypes;
+
+	UFUNCTION(BlueprintCallable, Category = "Perception")
+	void InitPerceptionInfo(float Radius, float ExtendedRadius, const TArray<TEnumAsByte<EObjectTypeQuery>>& ObjectTypesToDetect);
+	
 	UPROPERTY(BlueprintAssignable, Category = "Perception")
 	FOnActorDetected OnActorDetected;
 
@@ -57,17 +70,27 @@ public:
 	UFUNCTION(CallInEditor, BlueprintCallable, Category = "Perception")
 	void SetPerceptionDisabled();
 	
+	UFUNCTION(CallInEditor, BlueprintCallable, Category = "Sense")
+	void InitializeSenses();
+
+	UPROPERTY(BlueprintReadOnly, Category = "Sense")
+	TMap<ESenseType, TSubclassOf<AUSenseImplementationBase>> SenseMap;
+	
 private:
+	
+	UPROPERTY(VisibleAnywhere, Category = "Sense")
+	TArray<AUSenseImplementationBase*> InstantiatedSenseImplementations;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Detection", meta = (AllowPrivateAccess = "true"))
 	FPerceptionInfo DetectionParams;
 
 	UPROPERTY(VisibleAnywhere, Category = "Detection")
 	TArray<AActor*> DetectedActors;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Perception", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY()
 	USphereComponent* PrimaryDetectionSphere;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Perception", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY()
 	USphereComponent* ExtendedDetectionSphere;
 
 	UFUNCTION()

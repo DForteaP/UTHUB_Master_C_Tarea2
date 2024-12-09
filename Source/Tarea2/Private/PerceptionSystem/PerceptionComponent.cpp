@@ -1,6 +1,9 @@
 #include "PerceptionSystem/PerceptionComponent.h"
 #include "Components/SphereComponent.h"
 #include "DrawDebugHelpers.h"
+#include "PerceptionSystem/Detections/Hearing.h"
+#include "PerceptionSystem/Detections/Sight.h"
+#include "PerceptionSystem/Detections/Smell.h"
 
 UPerceptionComponent::UPerceptionComponent()
 {
@@ -17,6 +20,10 @@ UPerceptionComponent::UPerceptionComponent()
 	ExtendedDetectionSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
 	ExtendedDetectionSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	ExtendedDetectionSphere->SetGenerateOverlapEvents(true);
+
+	SenseMap.Add(ESenseType::Sight, ASight::StaticClass());
+	SenseMap.Add(ESenseType::Hearing, AHearing::StaticClass());
+	SenseMap.Add(ESenseType::Smell, ASmell::StaticClass());
 }
 
 void UPerceptionComponent::BeginPlay()
@@ -42,6 +49,23 @@ void UPerceptionComponent::BeginPlay()
 	if (!DetectionParams.ActorsToIgnore.Contains(GetOwner()))
 	{
 		DetectionParams.ActorsToIgnore.Add(GetOwner());
+	}
+}
+
+void UPerceptionComponent::InitPerceptionInfo(float Radius, float ExtendedRadius, const TArray<TEnumAsByte<EObjectTypeQuery>>& ObjectTypesToDetect)
+{
+	DetectionParams.Radius = Radius;
+	DetectionParams.ExtendedRadius = ExtendedRadius;
+	DetectionParams.ObjectTypesToDetect = ObjectTypesToDetect;
+	
+	if (PrimaryDetectionSphere)
+	{
+		PrimaryDetectionSphere->SetSphereRadius(DetectionParams.Radius);
+	}
+
+	if (ExtendedDetectionSphere)
+	{
+		ExtendedDetectionSphere->SetSphereRadius(DetectionParams.ExtendedRadius);
 	}
 }
 
@@ -95,5 +119,27 @@ void UPerceptionComponent::HandleEndOverlapExtended(UPrimitiveComponent* Overlap
 		DetectedActors.Remove(OtherActor);
 		OnActorLost.Broadcast(this, OtherActor);
 		//UE_LOG(LogTemp, Warning, TEXT("Actor Perdido: %s"), *OtherActor->GetName());
+	}
+}
+
+void UPerceptionComponent::InitializeSenses()
+{
+	InstantiatedSenseImplementations.Empty();
+	for (ESenseType SenseType : SenseTypes)
+	{
+		if (SenseMap.Contains(SenseType))
+		{
+			TSubclassOf<AUSenseImplementationBase> SenseClass = SenseMap[SenseType];
+			if (SenseClass)
+			{
+				AUSenseImplementationBase* NewSense = GetWorld()->SpawnActor<AUSenseImplementationBase>(SenseClass);
+				if (NewSense)
+				{
+					InstantiatedSenseImplementations.Add(NewSense);
+					NewSense->PerformDetection();
+					UE_LOG(LogTemp, Log, TEXT("Sentido activado: %s"), *NewSense->GetName());
+				}
+			}
+		}
 	}
 }
