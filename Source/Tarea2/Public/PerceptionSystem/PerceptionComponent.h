@@ -47,6 +47,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Perception")
 	FOnActorLost OnActorLost;
+	
+	UFUNCTION(BlueprintCallable, Category = "Perception")
+	void SetPerceptionEnabled(bool bEnabled);
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Detection", meta = (AllowPrivateAccess = "true"))
@@ -66,4 +69,6 @@ private:
 
 	UFUNCTION()
 	void HandleEndOverlapExtended(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	bool bPerceptionEnabled = true;
 };

@@ -44,24 +44,64 @@ void UPerceptionComponent::BeginPlay()
 	}
 }
 
+void UPerceptionComponent::SetPerceptionEnabled(bool bEnabled)
+{
+	bPerceptionEnabled = bEnabled;
+
+	if (PrimaryDetectionSphere)
+	{
+		PrimaryDetectionSphere->SetCollisionEnabled(bEnabled ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
+	}
+
+	if (ExtendedDetectionSphere)
+	{
+		ExtendedDetectionSphere->SetCollisionEnabled(bEnabled ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
+	}
+
+	if (!bEnabled)
+	{
+		for (AActor* Actor : DetectedActors)
+		{
+			if (Actor)
+			{
+				OnActorLost.Broadcast(Actor);
+				UE_LOG(LogTemp, Warning, TEXT("Actor Lost due to perception disable: %s"), *Actor->GetName());
+			}
+		}
+		DetectedActors.Empty();
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("Perception %s"), bEnabled ? TEXT("Enabled") : TEXT("Disabled"));
+}
+
 void UPerceptionComponent::HandleBeginOverlapPrimary(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (OtherActor && !DetectedActors.Contains(OtherActor))
+	if (!bPerceptionEnabled || !OtherActor || OtherActor == GetOwner())
+	{
+		return; 
+	}
+
+	if (!DetectedActors.Contains(OtherActor))
 	{
 		if (DetectionParams.ActorsToIgnore.Contains(OtherActor))
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Ignored Actor: %s"), *OtherActor->GetName());
 			return;
 		}
+
 		DetectedActors.Add(OtherActor);
 		OnActorDetected.Broadcast(OtherActor);
-		
 		UE_LOG(LogTemp, Log, TEXT("Actor Detected: %s"), *OtherActor->GetName());
 	}
 }
 
 void UPerceptionComponent::HandleEndOverlapExtended(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
+	if (!bPerceptionEnabled || !OtherActor)
+	{
+		return;
+	}
+	
 	if (OtherActor && DetectedActors.Contains(OtherActor))
 	{
 		DetectedActors.Remove(OtherActor);
