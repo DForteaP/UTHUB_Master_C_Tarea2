@@ -6,8 +6,8 @@
 
 class USphereComponent;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnActorDetected, AActor*, DetectedActor);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnActorLost, AActor*, LostActor);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActorDetected, UPerceptionComponent*, PerceptionComponent, AActor*, DetectedActor);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActorLost, UPerceptionComponent*, PerceptionComponent, AActor*, LostActor);
 
 USTRUCT(BlueprintType)
 struct TAREA2_API FPerceptionInfo
@@ -28,6 +28,9 @@ struct TAREA2_API FPerceptionInfo
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Detection")
 	TArray<AActor*> ActorsToIgnore;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Detection")
+	bool bPerceptionEnabled = true;
 };
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -48,9 +51,12 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Perception")
 	FOnActorLost OnActorLost;
 	
-	UFUNCTION(BlueprintCallable, Category = "Perception")
-	void SetPerceptionEnabled(bool bEnabled);
+	UFUNCTION(CallInEditor, BlueprintCallable, Category = "Perception")
+	void SetPerceptionEnabled();
 
+	UFUNCTION(CallInEditor, BlueprintCallable, Category = "Perception")
+	void SetPerceptionDisabled();
+	
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Detection", meta = (AllowPrivateAccess = "true"))
 	FPerceptionInfo DetectionParams;
@@ -69,6 +75,4 @@ private:
 
 	UFUNCTION()
 	void HandleEndOverlapExtended(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-
-	bool bPerceptionEnabled = true;
 };

@@ -6,6 +6,7 @@
 void UPerceptionSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
+	ActorsPerceptionComponents.Empty();
 	
 	FOnActorSpawned::FDelegate Delegate = FOnActorSpawned::FDelegate::CreateUObject(this, &ThisClass::RegisterNewActor);
 	OnActorSpawnedDelegateHandle = GetWorld()->AddOnActorSpawnedHandler(Delegate);
@@ -42,7 +43,7 @@ void UPerceptionSubsystem::GetAllPerceptionComponents(TArray<UPerceptionComponen
 	for (AActor* Actor : OutActors)
 	{
 		UPerceptionComponent* PerceptionComp = Actor->FindComponentByClass<UPerceptionComponent>();
-		if (PerceptionComp)
+		if (PerceptionComp && !ActorsPerceptionComponents.Contains(PerceptionComp))
 		{
 			OutActorsPerceptionComponents.Add(PerceptionComp);
 		}
@@ -51,8 +52,9 @@ void UPerceptionSubsystem::GetAllPerceptionComponents(TArray<UPerceptionComponen
 
 void UPerceptionSubsystem::RegisterNewActor(AActor* InNewActor)
 {
+	if (!InNewActor){return;}
 	UPerceptionComponent* PerceptionComp = InNewActor->FindComponentByClass<UPerceptionComponent>();
-	if (PerceptionComp)
+	if (PerceptionComp && !ActorsPerceptionComponents.Contains(PerceptionComp))
 	{
 		ActorsPerceptionComponents.Add(PerceptionComp);
 		SubscribeToPerceptionComponent(PerceptionComp);
@@ -61,10 +63,11 @@ void UPerceptionSubsystem::RegisterNewActor(AActor* InNewActor)
 
 void UPerceptionSubsystem::SubscribeToPerceptionComponent(UPerceptionComponent* PerceptionComponent)
 {
-		if (PerceptionComponent)
+		if (PerceptionComponent && !RegisteredPerceptionComponents.Contains(PerceptionComponent))
 		{
 			PerceptionComponent->OnActorDetected.AddDynamic(this, &UPerceptionSubsystem::HandleActorDetected);
 			PerceptionComponent->OnActorLost.AddDynamic(this, &UPerceptionSubsystem::HandleActorLost);
+			RegisteredPerceptionComponents.Add(PerceptionComponent);
 		}
 }
 
@@ -72,23 +75,31 @@ void UPerceptionSubsystem::SubscribeToPerceptionComponents()
 {
 	for (UPerceptionComponent* PerceptionComponent : ActorsPerceptionComponents)
 		{
-			if (PerceptionComponent)
+			if (PerceptionComponent && !RegisteredPerceptionComponents.Contains(PerceptionComponent))
 			{
 				PerceptionComponent->OnActorDetected.AddDynamic(this, &UPerceptionSubsystem::HandleActorDetected);
 				PerceptionComponent->OnActorLost.AddDynamic(this, &UPerceptionSubsystem::HandleActorLost);
+				RegisteredPerceptionComponents.Add(PerceptionComponent);
 			}
 		}
 }
 
-void UPerceptionSubsystem::HandleActorDetected(AActor* DetectedActor)
+void UPerceptionSubsystem::HandleActorDetected(UPerceptionComponent* PerceptionComponent, AActor* DetectedActor)
 {
-	UE_LOG(LogTemp, Log, TEXT("Subsystem: Actor Detected: %s"), *DetectedActor->GetName());
-	
+	if (!PerceptionComponent || !DetectedActor) return;
+
+	FString PerceptionOwnerName = PerceptionComponent->GetOwner() ? PerceptionComponent->GetOwner()->GetName() : TEXT("Alguien");
+	FString DetectedActorName = DetectedActor->GetName();
+
+	UE_LOG(LogTemp, Log, TEXT("%s ha detectado a %s"), *PerceptionOwnerName, *DetectedActorName);
 }
 
-void UPerceptionSubsystem::HandleActorLost(AActor* LostActor)
+void UPerceptionSubsystem::HandleActorLost(UPerceptionComponent* PerceptionComponent, AActor* LostActor)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Subsystem: Actor Lost: %s"), *LostActor->GetName());
+	if (!PerceptionComponent || !LostActor) return;
 
+	FString PerceptionOwnerName = PerceptionComponent->GetOwner() ? PerceptionComponent->GetOwner()->GetName() : TEXT("Alguien");
+	FString LostActorName = LostActor->GetName();
 
+	UE_LOG(LogTemp, Warning, TEXT("%s ha perdido a %s"), *PerceptionOwnerName, *LostActorName);
 }

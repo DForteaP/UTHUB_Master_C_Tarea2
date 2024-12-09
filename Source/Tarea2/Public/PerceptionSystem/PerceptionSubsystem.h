@@ -33,22 +33,25 @@ private:
 	
 	UFUNCTION()
 	void RegisterNewActor(AActor* InNewActor);
-
+	
 	UFUNCTION()
 	void SubscribeToPerceptionComponent(UPerceptionComponent* PerceptionComponent);
 
 	UPROPERTY(VisibleAnywhere)
 	TArray<UPerceptionComponent*> ActorsPerceptionComponents;
+	
+	UPROPERTY()
+	TArray<UPerceptionComponent*> RegisteredPerceptionComponents;
 
 	FDelegateHandle OnActorSpawnedDelegateHandle;
 	
 	void SubscribeToPerceptionComponents();
 
 	UFUNCTION()
-	void HandleActorDetected(AActor* DetectedActor);
+	void HandleActorDetected(UPerceptionComponent* PerceptionComponent, AActor* DetectedActor);
 
 	UFUNCTION()
-	void HandleActorLost(AActor* LostActor);
+	void HandleActorLost(UPerceptionComponent* PerceptionComponent, AActor* LostActor);
 
 };
 
