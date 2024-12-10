@@ -4,8 +4,9 @@
 #include "UObject/Object.h"
 #include "SenseImplementationBase.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnActorDetectedSense, AActor*, DetectedActor);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnActorLostSense, AActor*, LostActor);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActorDetectedSense, AActor*, DetectedActor, FString, SenseType);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActorLostSense, AActor*, LostActor, FString, SenseType);
+
 
 UCLASS()
 class TAREA2_API AUSenseImplementationBase : public AActor
@@ -23,6 +24,8 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Sense")
 	TArray<AActor*> PerformDetection();
 
+	FString Sense = "TEST";
+	
 protected:
 
 	UPROPERTY()

@@ -17,7 +17,7 @@ void AUSenseImplementationBase::ProcessDetectionResults(const TArray<AActor*>& C
 	{
 		if (!PreviouslyDetectedActors.Contains(Actor))
 		{
-			OnActorDetected.Broadcast(Actor);
+			OnActorDetected.Broadcast(Actor, Sense);
 		}
 	}
 	
@@ -25,7 +25,7 @@ void AUSenseImplementationBase::ProcessDetectionResults(const TArray<AActor*>& C
 	{
 		if (!CurrentlyDetectedActors.Contains(Actor))
 		{
-			OnActorLost.Broadcast(Actor);
+			OnActorLost.Broadcast(Actor, Sense);
 		}
 	}
 	

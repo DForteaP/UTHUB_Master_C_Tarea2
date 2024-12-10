@@ -80,7 +80,7 @@ void UPerceptionComponent::SetPerceptionDisabled()
 	{
 		if (Actor)
 		{
-			OnActorLost.Broadcast(this, Actor, EPerceptionType::Unknown);
+			OnActorLost.Broadcast(this, Actor, "Desactivacion");
 		}
 	}
 	DetectedActors.Empty();
@@ -100,22 +100,18 @@ void UPerceptionComponent::HandleBeginOverlapPrimary(UPrimitiveComponent* Overla
 		}
 
 		DetectedActors.Add(OtherActor);
-		OnActorDetected.Broadcast(this, OtherActor, EPerceptionType::Unknown);
+		OnActorDetected.Broadcast(this, OtherActor, "Sentido general");
 		//UE_LOG(LogTemp, Log, TEXT("Actor Detectado: %s"), *OtherActor->GetName());
 	}
 }
 
 void UPerceptionComponent::HandleEndOverlapExtended(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (!OtherActor)
-	{
-		return;
-	}
-	
+	if (!OtherActor){return;}
 	if (OtherActor && DetectedActors.Contains(OtherActor))
 	{
 		DetectedActors.Remove(OtherActor);
-		OnActorLost.Broadcast(this, OtherActor, EPerceptionType::Unknown);
+		OnActorLost.Broadcast(this, OtherActor, "Sentido general");
 		//UE_LOG(LogTemp, Warning, TEXT("Actor Perdido: %s"), *OtherActor->GetName());
 	}
 }
@@ -155,7 +151,7 @@ void UPerceptionComponent::UpdateSenses()
 				if (!DetectedActors.Contains(Actor))
 				{
 					DetectedActors.Add(Actor);
-					OnActorDetected.Broadcast(this, Actor, EPerceptionType::Unknown);
+					OnActorDetected.Broadcast(this, Actor, "");
 				}
 			}
 		}
@@ -172,16 +168,16 @@ void UPerceptionComponent::RemoveSense(TSubclassOf<AUSenseImplementationBase> Se
 	SenseTypes.Remove(SenseType);
 }
 
-void UPerceptionComponent::HandleActorDetectedFromSense(AActor* DetectedActor)
+void UPerceptionComponent::HandleActorDetectedFromSense(AActor* DetectedActor, FString Sense)
 {
 	DetectedActors.Add(DetectedActor);
-	OnActorDetected.Broadcast(this, DetectedActor);
+	OnActorDetected.Broadcast(this, DetectedActor, Sense);
 }
 
-void UPerceptionComponent::HandleActorLostFromSense(AActor* LostActor)
+void UPerceptionComponent::HandleActorLostFromSense(AActor* LostActor, const FString Sense)
 {
 	DetectedActors.Remove(LostActor);
-	OnActorLost.Broadcast(this, LostActor);
+	OnActorLost.Broadcast(this, LostActor, Sense);
 }
 
 void UPerceptionComponent::AttachToSocket()

@@ -89,24 +89,24 @@ void UPerceptionSubsystem::SubscribeToPerceptionComponents()
 		}
 }
 
-void UPerceptionSubsystem::HandleActorDetected(UPerceptionComponent* PerceptionComponent, AActor* DetectedActor)
+void UPerceptionSubsystem::HandleActorDetected(UPerceptionComponent* PerceptionComponent, AActor* DetectedActor, FString Sense)
 {
 	if (!PerceptionComponent || !DetectedActor) return;
 
 	FString PerceptionOwnerName = PerceptionComponent->GetOwner() ? PerceptionComponent->GetOwner()->GetName() : TEXT("Alguien");
 	FString DetectedActorName = DetectedActor->GetName();
 
-	UE_LOG(LogTemp, Log, TEXT("%s ha detectado a %s"), *PerceptionOwnerName, *DetectedActorName);
+	UE_LOG(LogTemp, Log, TEXT("%s ha detectado a %s por medio del sentido %s"), *PerceptionOwnerName, *DetectedActorName, *Sense);
 }
 
-void UPerceptionSubsystem::HandleActorLost(UPerceptionComponent* PerceptionComponent, AActor* LostActor)
+void UPerceptionSubsystem::HandleActorLost(UPerceptionComponent* PerceptionComponent, AActor* LostActor, FString Sense)
 {
 	if (!PerceptionComponent || !LostActor) return;
 
 	FString PerceptionOwnerName = PerceptionComponent->GetOwner() ? PerceptionComponent->GetOwner()->GetName() : TEXT("Alguien");
 	FString LostActorName = LostActor->GetName();
 
-	UE_LOG(LogTemp, Warning, TEXT("%s ha perdido a %s"), *PerceptionOwnerName, *LostActorName);
+	UE_LOG(LogTemp, Warning, TEXT("%s ha perdido a %s por medio del sentido %s"), *PerceptionOwnerName, *LostActorName, *Sense);
 }
 
 void UPerceptionSubsystem::SetPerceptionEnabledForActors(const TArray<UPerceptionComponent*>& AffectedComponents, bool bEnablePerception)

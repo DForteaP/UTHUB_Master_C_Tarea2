@@ -45,10 +45,10 @@ private:
 	void SubscribeToPerceptionComponents();
 
 	UFUNCTION()
-	void HandleActorDetected(UPerceptionComponent* PerceptionComponent, AActor* DetectedActor);
+	void HandleActorDetected(UPerceptionComponent* PerceptionComponent, AActor* DetectedActor, FString Sense);
 
 	UFUNCTION()
-	void HandleActorLost(UPerceptionComponent* PerceptionComponent, AActor* LostActor);
+	void HandleActorLost(UPerceptionComponent* PerceptionComponent, AActor* LostActor, FString Sense);
 
 };
 

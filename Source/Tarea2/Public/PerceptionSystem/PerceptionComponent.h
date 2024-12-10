@@ -5,19 +5,10 @@
 #include "Components/ActorComponent.h"
 #include "PerceptionComponent.generated.h"
 
-UENUM(BlueprintType)
-enum class EPerceptionType : uint8
-{
-	Hearing   UMETA(DisplayName = "Hearing"),
-	Smell     UMETA(DisplayName = "Smell"),
-	Sight     UMETA(DisplayName = "Sight"),
-	Unknown   UMETA(DisplayName = "Unknown")
-};
-
 class USphereComponent;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnActorDetected, UPerceptionComponent*, PerceptionComponent, AActor*, DetectedActor, EPerceptionType, PerceptionType);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnActorLost, UPerceptionComponent*, PerceptionComponent, AActor*, LostActor, EPerceptionType, PerceptionType);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnActorDetected, UPerceptionComponent*, PerceptionComponent, AActor*, DetectedActor, FString, PerceptionType);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnActorLost, UPerceptionComponent*, PerceptionComponent, AActor*, LostActor, FString, PerceptionType);
 
 USTRUCT(BlueprintType)
 struct TAREA2_API FPerceptionInfo
@@ -121,9 +112,9 @@ private:
 	void HandleEndOverlapExtended(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	UFUNCTION()
-	void HandleActorDetectedFromSense(AActor* DetectedActor);
+	void HandleActorDetectedFromSense(AActor* DetectedActor,  FString Sense);
 
 	UFUNCTION()
-	void HandleActorLostFromSense(AActor* LostActor);
+	void HandleActorLostFromSense(AActor* LostActor,  FString Sense);
 	void AttachToSocket();
 };

@@ -24,4 +24,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual TArray<AActor*> PerformDetection_Implementation() override;
+
+	FString Sense = "VISTA";
 };
