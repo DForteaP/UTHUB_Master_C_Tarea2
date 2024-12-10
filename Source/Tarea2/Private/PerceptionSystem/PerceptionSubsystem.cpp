@@ -1,4 +1,6 @@
 #include "Tarea2/Public/PerceptionSystem/PerceptionSubsystem.h"
+
+#include "LandscapeGizmoActiveActor.h"
 #include "Kismet/GameplayStatics.h"
 #include "Tarea2/Public/PerceptionSystem/PerceptionComponent.h"
 
@@ -102,4 +104,37 @@ void UPerceptionSubsystem::HandleActorLost(UPerceptionComponent* PerceptionCompo
 	FString LostActorName = LostActor->GetName();
 
 	UE_LOG(LogTemp, Warning, TEXT("%s ha perdido a %s"), *PerceptionOwnerName, *LostActorName);
+}
+
+void UPerceptionSubsystem::SetPerceptionEnabledForActors(const TArray<UPerceptionComponent*>& AffectedComponents, bool bEnablePerception)
+{
+	for (UPerceptionComponent* ComponentAffected : AffectedComponents)
+	{
+		if (!ComponentAffected)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Null component in AffectedComponents array."));
+			continue;
+		}
+
+		if (RegisteredPerceptionComponents.Contains(ComponentAffected))
+		{
+			if (bEnablePerception)
+			{
+				ComponentAffected->SetPerceptionEnabled();
+			}
+			else
+			{
+				ComponentAffected->SetPerceptionDisabled();
+			}
+
+			UE_LOG(LogTemp, Log, TEXT("Perception %s for component: %s"),
+				   bEnablePerception ? TEXT("enabled") : TEXT("disabled"),
+				   *ComponentAffected->GetName());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Component %s is not registered in the subsystem."),
+				   *ComponentAffected->GetName());
+		}
+	}
 }

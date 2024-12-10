@@ -1,9 +1,6 @@
 #include "PerceptionSystem/PerceptionComponent.h"
 #include "Components/SphereComponent.h"
 #include "DrawDebugHelpers.h"
-#include "PerceptionSystem/Detections/Hearing.h"
-#include "PerceptionSystem/Detections/Sight.h"
-#include "PerceptionSystem/Detections/Smell.h"
 
 UPerceptionComponent::UPerceptionComponent()
 {
@@ -20,10 +17,6 @@ UPerceptionComponent::UPerceptionComponent()
 	ExtendedDetectionSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
 	ExtendedDetectionSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	ExtendedDetectionSphere->SetGenerateOverlapEvents(true);
-
-	SenseMap.Add(ESenseType::Sight, ASight::StaticClass());
-	SenseMap.Add(ESenseType::Hearing, AHearing::StaticClass());
-	SenseMap.Add(ESenseType::Smell, ASmell::StaticClass());
 }
 
 void UPerceptionComponent::BeginPlay()
@@ -124,22 +117,19 @@ void UPerceptionComponent::HandleEndOverlapExtended(UPrimitiveComponent* Overlap
 
 void UPerceptionComponent::InitializeSenses()
 {
-	InstantiatedSenseImplementations.Empty();
-	for (ESenseType SenseType : SenseTypes)
+	for (TSubclassOf<AUSenseImplementationBase> SenseType : SenseTypes)
 	{
-		if (SenseMap.Contains(SenseType))
-		{
-			TSubclassOf<AUSenseImplementationBase> SenseClass = SenseMap[SenseType];
-			if (SenseClass)
-			{
-				AUSenseImplementationBase* NewSense = GetWorld()->SpawnActor<AUSenseImplementationBase>(SenseClass);
-				if (NewSense)
-				{
-					InstantiatedSenseImplementations.Add(NewSense);
-					NewSense->PerformDetection();
-					UE_LOG(LogTemp, Log, TEXT("Sentido activado: %s"), *NewSense->GetName());
-				}
-			}
-		}
+			//SenseType->PerformDetection();
+			UE_LOG(LogTemp, Log, TEXT("Sentido activado: %s"), *SenseType->GetName());
 	}
+}
+
+void UPerceptionComponent::AddSense(TSubclassOf<AUSenseImplementationBase> SenseType)
+{
+	if (SenseTypes.Contains(SenseType)){return;}
+	SenseTypes.Add(SenseType);
+}
+void UPerceptionComponent::RemoveSense(TSubclassOf<AUSenseImplementationBase> SenseType)
+{
+	SenseTypes.Remove(SenseType);
 }

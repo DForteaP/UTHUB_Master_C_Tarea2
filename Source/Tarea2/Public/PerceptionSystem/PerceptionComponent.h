@@ -52,35 +52,46 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sense")
-	TSet<ESenseType> SenseTypes;
-
-	UFUNCTION(BlueprintCallable, Category = "Perception")
-	void InitPerceptionInfo(float Radius, float ExtendedRadius, const TArray<TEnumAsByte<EObjectTypeQuery>>& ObjectTypesToDetect);
 	
+	//PROPERTIES
 	UPROPERTY(BlueprintAssignable, Category = "Perception")
 	FOnActorDetected OnActorDetected;
 
 	UPROPERTY(BlueprintAssignable, Category = "Perception")
 	FOnActorLost OnActorLost;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sense")
+	TSet<TSubclassOf<AUSenseImplementationBase>> SenseTypes;
+
+	//FUNCTIONS
+
+	//Cambiar parametros percepción esfera
+	UFUNCTION(BlueprintCallable, Category = "Perception")
+	void InitPerceptionInfo(float Radius, float ExtendedRadius, const TArray<TEnumAsByte<EObjectTypeQuery>>& ObjectTypesToDetect);
+
+	//Activar percepción
 	UFUNCTION(CallInEditor, BlueprintCallable, Category = "Perception")
 	void SetPerceptionEnabled();
 
+	//Desactivar percepción
 	UFUNCTION(CallInEditor, BlueprintCallable, Category = "Perception")
 	void SetPerceptionDisabled();
-	
+
+	//Inicializar sentidos en lista
 	UFUNCTION(CallInEditor, BlueprintCallable, Category = "Sense")
 	void InitializeSenses();
 
-	UPROPERTY(BlueprintReadOnly, Category = "Sense")
-	TMap<ESenseType, TSubclassOf<AUSenseImplementationBase>> SenseMap;
+	//Añadir sentido a lista
+	UFUNCTION(Blueprintable, Category = "Perception")
+	void AddSense(TSubclassOf<AUSenseImplementationBase> SenseType);
+
+	//Eliminar sentido en lista
+	UFUNCTION(Blueprintable, Category = "Perception")
+	void RemoveSense(TSubclassOf<AUSenseImplementationBase> SenseType);
 	
 private:
-	
-	UPROPERTY(VisibleAnywhere, Category = "Sense")
-	TArray<AUSenseImplementationBase*> InstantiatedSenseImplementations;
-	
+
+	//PROPERTIES
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Detection", meta = (AllowPrivateAccess = "true"))
 	FPerceptionInfo DetectionParams;
 
@@ -93,6 +104,7 @@ private:
 	UPROPERTY()
 	USphereComponent* ExtendedDetectionSphere;
 
+	//FUNCTIONS
 	UFUNCTION()
 	void HandleBeginOverlapPrimary(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 

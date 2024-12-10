@@ -37,10 +37,13 @@ private:
 	UFUNCTION()
 	void SubscribeToPerceptionComponent(UPerceptionComponent* PerceptionComponent);
 
+	UFUNCTION(BlueprintCallable)
+	void SetPerceptionEnabledForActors(const TArray<UPerceptionComponent*>& AffectedComponents, bool bEnablePerception);
+
 	UPROPERTY(VisibleAnywhere)
 	TArray<UPerceptionComponent*> ActorsPerceptionComponents;
-	
-	UPROPERTY()
+
+	UPROPERTY(VisibleAnywhere, Blueprintable)
 	TArray<UPerceptionComponent*> RegisteredPerceptionComponents;
 
 	FDelegateHandle OnActorSpawnedDelegateHandle;
