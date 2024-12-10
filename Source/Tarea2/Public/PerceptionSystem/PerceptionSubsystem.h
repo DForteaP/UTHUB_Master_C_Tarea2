@@ -17,15 +17,9 @@ protected:
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
 
 public:
-
-	//UFUNCTION(BlueprintCallable)
-	//void AddActionToActor(AActor* InActor, const TSubclassOf<UPerceptionComponent>& InAction);
-
-	//UFUNCTION(BlueprintCallable)
-	//void RemoveActionToActor(AActor* InActor, const TSubclassOf<UPerceptionComponent>& InAction);
-
-	//UFUNCTION(BlueprintCallable)
-	//void StopCurrentAction(AActor* InActor);
+	
+	UFUNCTION(BlueprintCallable)
+	TArray<UPerceptionComponent*> GetComponentsRegistered();
 
 private:
 	UFUNCTION(BlueprintCallable)

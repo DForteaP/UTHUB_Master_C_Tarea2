@@ -1,6 +1,7 @@
 #include "PerceptionSystem/PerceptionComponent.h"
 #include "Components/SphereComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Components/SceneComponent.h"
 
 UPerceptionComponent::UPerceptionComponent()
 {
@@ -43,6 +44,10 @@ void UPerceptionComponent::BeginPlay()
 	{
 		DetectionParams.ActorsToIgnore.Add(GetOwner());
 	}
+
+	AttachToSocket();
+	InitializeSenses();
+	GetWorld()->GetTimerManager().SetTimer(SenseUpdateTimer, this, &UPerceptionComponent::UpdateSenses, 1.5f, true);
 }
 
 void UPerceptionComponent::InitPerceptionInfo(float Radius, float ExtendedRadius, const TArray<TEnumAsByte<EObjectTypeQuery>>& ObjectTypesToDetect)
@@ -75,7 +80,7 @@ void UPerceptionComponent::SetPerceptionDisabled()
 	{
 		if (Actor)
 		{
-			OnActorLost.Broadcast(this, Actor);
+			OnActorLost.Broadcast(this, Actor, EPerceptionType::Unknown);
 		}
 	}
 	DetectedActors.Empty();
@@ -95,7 +100,7 @@ void UPerceptionComponent::HandleBeginOverlapPrimary(UPrimitiveComponent* Overla
 		}
 
 		DetectedActors.Add(OtherActor);
-		OnActorDetected.Broadcast(this, OtherActor);
+		OnActorDetected.Broadcast(this, OtherActor, EPerceptionType::Unknown);
 		//UE_LOG(LogTemp, Log, TEXT("Actor Detectado: %s"), *OtherActor->GetName());
 	}
 }
@@ -110,7 +115,7 @@ void UPerceptionComponent::HandleEndOverlapExtended(UPrimitiveComponent* Overlap
 	if (OtherActor && DetectedActors.Contains(OtherActor))
 	{
 		DetectedActors.Remove(OtherActor);
-		OnActorLost.Broadcast(this, OtherActor);
+		OnActorLost.Broadcast(this, OtherActor, EPerceptionType::Unknown);
 		//UE_LOG(LogTemp, Warning, TEXT("Actor Perdido: %s"), *OtherActor->GetName());
 	}
 }
@@ -119,8 +124,41 @@ void UPerceptionComponent::InitializeSenses()
 {
 	for (TSubclassOf<AUSenseImplementationBase> SenseType : SenseTypes)
 	{
-			//SenseType->PerformDetection();
+		if (!SenseType) continue;
+		
+		AUSenseImplementationBase* SenseInstance = GetWorld()->SpawnActor<AUSenseImplementationBase>(SenseType);
+		if (SenseInstance)
+		{
+			SenseInstance->SetOwner(GetOwner());
+			SenseInstance->OnActorDetected.AddDynamic(this, &UPerceptionComponent::HandleActorDetectedFromSense);
+			SenseInstance->OnActorLost.AddDynamic(this, &UPerceptionComponent::HandleActorLostFromSense);
+			ActiveSenses.Add(SenseInstance);
+
 			UE_LOG(LogTemp, Log, TEXT("Sentido activado: %s"), *SenseType->GetName());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("No se pudo crear una instancia del sentido: %s"), *SenseType->GetName());
+		}
+	}
+}
+
+void UPerceptionComponent::UpdateSenses()
+{
+	for (AUSenseImplementationBase* Sense : ActiveSenses)
+	{
+		if (Sense)
+		{
+			TArray<AActor*> DetectedActorsSense = Sense->PerformDetection();
+			for (AActor* Actor : DetectedActorsSense)
+			{
+				if (!DetectedActors.Contains(Actor))
+				{
+					DetectedActors.Add(Actor);
+					OnActorDetected.Broadcast(this, Actor, EPerceptionType::Unknown);
+				}
+			}
+		}
 	}
 }
 
@@ -132,4 +170,35 @@ void UPerceptionComponent::AddSense(TSubclassOf<AUSenseImplementationBase> Sense
 void UPerceptionComponent::RemoveSense(TSubclassOf<AUSenseImplementationBase> SenseType)
 {
 	SenseTypes.Remove(SenseType);
+}
+
+void UPerceptionComponent::HandleActorDetectedFromSense(AActor* DetectedActor)
+{
+	DetectedActors.Add(DetectedActor);
+	OnActorDetected.Broadcast(this, DetectedActor);
+}
+
+void UPerceptionComponent::HandleActorLostFromSense(AActor* LostActor)
+{
+	DetectedActors.Remove(LostActor);
+	OnActorLost.Broadcast(this, LostActor);
+}
+
+void UPerceptionComponent::AttachToSocket()
+{
+	AActor* OwnerActor = GetOwner();
+	if (OwnerActor)
+	{
+		USkeletalMeshComponent* SkeletalMeshComp = OwnerActor->FindComponentByClass<USkeletalMeshComponent>();
+		if (SkeletalMeshComp)
+		{
+			
+			this->AttachToComponent(SkeletalMeshComp, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), DetectionParams.SocketName);
+			UE_LOG(LogTemp, Log, TEXT("Componente enganchado al socket %s"), *DetectionParams.SocketName.ToString());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("El actor no tiene un SkeletalMeshComponent."));
+		}
+	}
 }

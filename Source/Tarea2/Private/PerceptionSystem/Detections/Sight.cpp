@@ -24,3 +24,11 @@ void ASight::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
+TArray<AActor*> ASight::PerformDetection_Implementation()
+{
+
+	UE_LOG(LogTemp, Warning, TEXT("Viendo"));
+	
+	return Super::PerformDetection_Implementation();
+}
+

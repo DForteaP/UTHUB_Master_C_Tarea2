@@ -1,6 +1,4 @@
 #include "Tarea2/Public/PerceptionSystem/PerceptionSubsystem.h"
-
-#include "LandscapeGizmoActiveActor.h"
 #include "Kismet/GameplayStatics.h"
 #include "Tarea2/Public/PerceptionSystem/PerceptionComponent.h"
 
@@ -35,6 +33,11 @@ void UPerceptionSubsystem::Deinitialize()
 bool UPerceptionSubsystem::ShouldCreateSubsystem(UObject* Outer) const
 {
 	return true;
+}
+
+TArray<UPerceptionComponent*> UPerceptionSubsystem::GetComponentsRegistered()
+{
+	return RegisteredPerceptionComponents;
 }
 
 void UPerceptionSubsystem::GetAllPerceptionComponents(TArray<UPerceptionComponent*>& OutActorsPerceptionComponents) const
@@ -110,12 +113,6 @@ void UPerceptionSubsystem::SetPerceptionEnabledForActors(const TArray<UPerceptio
 {
 	for (UPerceptionComponent* ComponentAffected : AffectedComponents)
 	{
-		if (!ComponentAffected)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Null component in AffectedComponents array."));
-			continue;
-		}
-
 		if (RegisteredPerceptionComponents.Contains(ComponentAffected))
 		{
 			if (bEnablePerception)
@@ -127,13 +124,8 @@ void UPerceptionSubsystem::SetPerceptionEnabledForActors(const TArray<UPerceptio
 				ComponentAffected->SetPerceptionDisabled();
 			}
 
-			UE_LOG(LogTemp, Log, TEXT("Perception %s for component: %s"),
-				   bEnablePerception ? TEXT("enabled") : TEXT("disabled"),
-				   *ComponentAffected->GetName());
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Component %s is not registered in the subsystem."),
+			UE_LOG(LogTemp, Log, TEXT("Percepcion %s del componente: %s"),
+				   bEnablePerception ? TEXT("activada") : TEXT("desactivada"),
 				   *ComponentAffected->GetName());
 		}
 	}

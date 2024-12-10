@@ -5,10 +5,19 @@
 #include "Components/ActorComponent.h"
 #include "PerceptionComponent.generated.h"
 
+UENUM(BlueprintType)
+enum class EPerceptionType : uint8
+{
+	Hearing   UMETA(DisplayName = "Hearing"),
+	Smell     UMETA(DisplayName = "Smell"),
+	Sight     UMETA(DisplayName = "Sight"),
+	Unknown   UMETA(DisplayName = "Unknown")
+};
+
 class USphereComponent;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActorDetected, UPerceptionComponent*, PerceptionComponent, AActor*, DetectedActor);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActorLost, UPerceptionComponent*, PerceptionComponent, AActor*, LostActor);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnActorDetected, UPerceptionComponent*, PerceptionComponent, AActor*, DetectedActor, EPerceptionType, PerceptionType);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnActorLost, UPerceptionComponent*, PerceptionComponent, AActor*, LostActor, EPerceptionType, PerceptionType);
 
 USTRUCT(BlueprintType)
 struct TAREA2_API FPerceptionInfo
@@ -29,19 +38,13 @@ struct TAREA2_API FPerceptionInfo
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Detection")
 	bool bPerceptionEnabled = true;
-};
 
-UENUM(BlueprintType)
-enum class ESenseType : uint8
-{
-	Sight UMETA(DisplayName = "Sight"),
-	Hearing UMETA(DisplayName = "Hearing"),
-	Smell UMETA(DisplayName = "Smell")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Detection")
+	FName SocketName =TEXT("Socket");
 };
-
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class TAREA2_API UPerceptionComponent : public UActorComponent
+class TAREA2_API UPerceptionComponent : public USceneComponent
 {
 	GENERATED_BODY()
 
@@ -63,8 +66,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sense")
 	TSet<TSubclassOf<AUSenseImplementationBase>> SenseTypes;
 
-	//FUNCTIONS
+	UPROPERTY()
+	TArray<AUSenseImplementationBase*> ActiveSenses;
 
+	FTimerHandle SenseUpdateTimer;
+	
+	//FUNCTIONS
+	
 	//Cambiar parametros percepción esfera
 	UFUNCTION(BlueprintCallable, Category = "Perception")
 	void InitPerceptionInfo(float Radius, float ExtendedRadius, const TArray<TEnumAsByte<EObjectTypeQuery>>& ObjectTypesToDetect);
@@ -80,6 +88,7 @@ public:
 	//Inicializar sentidos en lista
 	UFUNCTION(CallInEditor, BlueprintCallable, Category = "Sense")
 	void InitializeSenses();
+	void UpdateSenses();
 
 	//Añadir sentido a lista
 	UFUNCTION(Blueprintable, Category = "Perception")
@@ -88,7 +97,7 @@ public:
 	//Eliminar sentido en lista
 	UFUNCTION(Blueprintable, Category = "Perception")
 	void RemoveSense(TSubclassOf<AUSenseImplementationBase> SenseType);
-	
+
 private:
 
 	//PROPERTIES
@@ -110,4 +119,11 @@ private:
 
 	UFUNCTION()
 	void HandleEndOverlapExtended(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	UFUNCTION()
+	void HandleActorDetectedFromSense(AActor* DetectedActor);
+
+	UFUNCTION()
+	void HandleActorLostFromSense(AActor* LostActor);
+	void AttachToSocket();
 };
