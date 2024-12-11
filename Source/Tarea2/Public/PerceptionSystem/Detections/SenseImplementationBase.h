@@ -7,7 +7,6 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActorDetectedSense, AActor*, DetectedActor, FString, SenseType);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActorLostSense, AActor*, LostActor, FString, SenseType);
 
-
 UCLASS()
 class TAREA2_API AUSenseImplementationBase : public AActor
 {
@@ -31,5 +30,5 @@ protected:
 	UPROPERTY()
 	TArray<AActor*> PreviouslyDetectedActors;
 	
-	void ProcessDetectionResults(const TArray<AActor*>& CurrentlyDetectedActors);
+	void ProcessDetectionResults(const TArray<AActor*>& CurrentlyDetectedActors, FString Sense);
 };

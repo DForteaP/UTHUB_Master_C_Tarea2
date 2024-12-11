@@ -1,24 +1,16 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "PerceptionSystem/Detections/Sight.h"
 
-
-// Sets default values
 ASight::ASight()
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 }
 
-// Called when the game starts or when spawned
 void ASight::BeginPlay()
 {
 	Super::BeginPlay();
 	
 }
 
-// Called every frame
 void ASight::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -26,9 +18,47 @@ void ASight::Tick(float DeltaTime)
 
 TArray<AActor*> ASight::PerformDetection_Implementation()
 {
-
-	UE_LOG(LogTemp, Warning, TEXT("Viendo"));
+	//UE_LOG(LogTemp, Warning, TEXT("Viendo"));
+	TArray<AActor*> DetectedActors;
+	UWorld* World = GetWorld();
+	if (!World){return DetectedActors;}
 	
-	return Super::PerformDetection_Implementation();
+	AActor* OwnerActor = GetOwner();
+	if (!OwnerActor)
+	{return DetectedActors;}
+	
+	FVector StartLocation = OwnerActor->GetActorLocation();
+	FVector ForwardDirection = OwnerActor->GetActorForwardVector();
+	FVector EndLocation = StartLocation + (ForwardDirection * 3000);
+	
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(OwnerActor); 
+	QueryParams.bTraceComplex = true;
+	
+	TArray<FHitResult> HitResults;
+	bool bHit = World->LineTraceMultiByChannel(HitResults,StartLocation,EndLocation,ECC_Pawn,QueryParams);
+
+	if (bHit)
+	{
+		for (const FHitResult& Hit : HitResults)
+		{
+			if (AActor* HitActor = Hit.GetActor())
+			{
+				APawn* HitPawn = Cast<APawn>(HitActor);
+				if (HitPawn && !DetectedActors.Contains(HitActor))
+				{
+					DetectedActors.Add(HitActor);
+				}
+			}
+		}
+	}
+
+#if WITH_EDITOR
+	DrawDebugLine(World, StartLocation, EndLocation, FColor::Blue, false, 1.0f, 0, 2.0f);
+#endif
+
+	ProcessDetectionResults(DetectedActors, Sense);
+	
+	return DetectedActors;
 }
 

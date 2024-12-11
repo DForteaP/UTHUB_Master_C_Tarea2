@@ -17,8 +17,7 @@ void AHearing::Tick(float DeltaTime)
 
 TArray<AActor*> AHearing::PerformDetection_Implementation()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Escuchando"));
-
+	//UE_LOG(LogTemp, Warning, TEXT("Escuchando"));
 	TArray<AActor*> DetectedActors;
 	UWorld* World = GetWorld();
 	if (!World){return DetectedActors;}
@@ -36,14 +35,7 @@ TArray<AActor*> AHearing::PerformDetection_Implementation()
 	QueryParams.bTraceComplex = true;
 	
 	TArray<FHitResult> HitResults;
-	
-	bool bHit = World->LineTraceMultiByChannel(
-		HitResults,
-		StartLocation,
-		EndLocation,
-		ECC_Pawn,
-		QueryParams
-	);
+	bool bHit = World->LineTraceMultiByChannel(HitResults,StartLocation,EndLocation,ECC_Pawn,QueryParams);
 
 	if (bHit)
 	{
@@ -64,6 +56,8 @@ TArray<AActor*> AHearing::PerformDetection_Implementation()
 	DrawDebugLine(World, StartLocation, EndLocation, FColor::Blue, false, 1.0f, 0, 2.0f);
 #endif
 
+	ProcessDetectionResults(DetectedActors, Sense);
+	
 	return DetectedActors;
 }
 
